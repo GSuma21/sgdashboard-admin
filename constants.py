@@ -9,7 +9,8 @@ PAGE_METADATA = {
     "TESTIMONIALS":"Testimonials",
     "PROGRAMS":"Programs",
     "COMMUNITY_LED_PROGRAMS":"Community Led Programs",
-    "DISTRICT_DETAILS": "District Details"
+    "DISTRICT_DETAILS": "District Details",
+    "UPLOAD_IMAGES":"Imagesicons"
 }
 
 TABS_METADATA = {
@@ -36,5 +37,6 @@ TABS_METADATA = {
         "Report Link"
     ],
     "COMMUNITY_LEAD_PROGRAMS":["Name of the State ","Name of the District","No. of community leaders engaged","Community led improvements","Challenges shared","Solutions shared","Infrastructure and resources","School structure and practices","Leadership"," Pedagogy","Assessment and Evaluation","Community Engagement","Districts initiated"],
-    "DISTRICT_DETAILS": ["State Name", "District Name", "Indicator", "Definition", "Data"]
+    "DISTRICT_DETAILS": ["State Name", "District Name", "Indicator", "Definition", "Data"],
+    "UPLOAD_IMAGES":['Name of images','Link of images']
 }
