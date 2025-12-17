@@ -7,7 +7,7 @@ import streamlit as st
 JSON_DIR = "pages"
 os.makedirs(JSON_DIR, exist_ok=True)
 
-json_tabs = ["landing page", "Network data"]
+json_tabs = ["landing page", "Community country view", "Community details page", "District view indicators", "Community led improvements page", "Network health", "State details page"]
 json_files = {name: f"{JSON_DIR}/{name.replace(' ', '-').lower()}.json" for name in json_tabs}
 
 tabs = st.tabs(json_tabs)
