@@ -35,7 +35,7 @@ allowed_tabs = [
 # ✅ Map sheet names to upload processing functions
 upload_actions = {
     "Data on homepage": key_progress_indicators,
-    "Dashboard first page": key_progress_indicators,  # or update as needed
+    "Dashboard first page": pie_chart,
     "Goals": goals,
     "States details": update_district_view_indicators,
     "District Details": extract_district_details,
@@ -43,7 +43,8 @@ upload_actions = {
     "Micro improvements progress": extract_micro_improvements,
     "Partners": get_partners,
     "Network Map": get_network_map_data,
-    "Testimonials": testimonials
+    "Testimonials": testimonials,
+    "Imagesicons":upload_images_from_excel
 }
 
 
@@ -164,19 +165,19 @@ if uploaded_file is not None:
         if st.button("🚀 Upload all files"):
             try:
                 with st.status("🔄 Uploading and processing all allowed sheets...", expanded=True) as status:
-                    # key_progress_indicators(uploaded_file)
-                    # get_partners(uploaded_file)
-                    # get_network_map_data(uploaded_file)
-                    # update_district_view_indicators(uploaded_file)
-                    # extract_district_details(uploaded_file)
-                    # goals(uploaded_file)
-                    # pie_chart(uploaded_file)
-                    # testimonials(uploaded_file)
-                    # pie_chart_community_led(uploaded_file)
-                    # community_led_programs_sum_with_codes(uploaded_file)
-                    # generate_program_reports(uploaded_file)
-                    # extract_community_details(uploaded_file)
-                    # extract_micro_improvements(uploaded_file)
+                    key_progress_indicators(uploaded_file)
+                    get_partners(uploaded_file)
+                    get_network_map_data(uploaded_file)
+                    update_district_view_indicators(uploaded_file)
+                    extract_district_details(uploaded_file)
+                    goals(uploaded_file)
+                    pie_chart(uploaded_file)
+                    testimonials(uploaded_file)
+                    pie_chart_community_led(uploaded_file)
+                    community_led_programs_sum_with_codes(uploaded_file)
+                    generate_program_reports(uploaded_file)
+                    extract_community_details(uploaded_file)
+                    extract_micro_improvements(uploaded_file)
                     upload_images_from_excel(uploaded_file)
                     status.update(label="✅ All files uploaded successfully!", state="complete")
             except Exception as e:

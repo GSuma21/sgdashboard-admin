@@ -30,7 +30,7 @@ for blob in blobs:
     if blob.name.endswith("/"):
         continue
 
-    col1, col2, col3 = st.columns([1, 4, 1])
+    col1, col2, col3, col4 = st.columns([1, 2, 4, 1])
 
     with col1:
         st.image(blob.public_url, width=50)
@@ -39,6 +39,9 @@ for blob in blobs:
         st.write(blob.name.replace(prefix, ""))
 
     with col3:
+        st.write(blob.public_url.replace(prefix, ""))
+
+    with col4:
         if st.button("Delete", key=blob.name):
             blob.delete()
             st.success(f"Deleted {blob.name}")
