@@ -101,13 +101,15 @@ def voices_tab_big_numbers(excel_file):
         for section in json_data:
             if section.get("type") == "data-indicators":
                 for i, indicator in enumerate(section.get("indicators", [])):
+                    if i >= len(indicator_totals):
+                        print(f"⚠️ Skipping {indicator.get('label')} — no corresponding total in Excel")
+                        continue
                     old = indicator.get("value")
                     new = indicator_totals[i]
                     indicator["value"] = new
                     print(
-                        f"   🔄 {indicator.get('label')} : "
-                        f"{old} → {new}"
-                    )
+                        f"   🔄 {indicator.get('label')} : {old} → {new}"
+                  )
 
         # --------------------------------------------------
         # Write JSON
