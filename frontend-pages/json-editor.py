@@ -46,6 +46,38 @@ def upload_json_to_gcs(json_path, tab_name):
         st.error(f"❌ Exception uploading JSON to GCS: {e}")
         return None
 
+
+# -------------------------------
+# Function to download JSON from GCS
+# -------------------------------
+def download_json_from_gcs(tab_name):
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+
+        gcp_access_path = os.path.join(script_dir, '..', 'cloud-scripts', 'gcp_access.py')
+        spec = importlib.util.spec_from_file_location('gcp_access', gcp_access_path)
+        gcp_access = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(gcp_access)
+
+        private_key_path = os.path.join(script_dir, "..", "private-key.json")
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = private_key_path
+
+        bucket_name = os.environ.get("BUCKET_NAME")
+        if not bucket_name:
+            return None
+
+        file_name = tab_name.replace(" ", "-").lower() + ".json"
+        blob_name = f"sg-dashboard/{file_name}"
+
+        return gcp_access.download_json_from_gcs(
+            bucket_name=bucket_name,
+            blob_name=blob_name
+        )
+
+    except Exception:
+        return None
+
+
 # -------------------------------
 # Streamlit App
 # -------------------------------
@@ -53,7 +85,7 @@ st.title("JSON Editor & GCS Uploader")
 
 json_tabs = [
     "landing page", "Community country view", "Community details page",
-    "District view indicators", "Community led improvements page",
+    "District view indicators", "Community led improvements page", "dashboard",
     "Network health", "State details page", "Voices from the ground"
 ]
 
@@ -76,8 +108,15 @@ for i, name in enumerate(json_tabs):
     with tabs[i]:
         st.subheader(f"🗂 {name} JSON")
 
-        # Load JSON for editor
-        if os.path.exists(file_path):
+        # -------------------------------
+        # Load JSON for editor (GCS first, then local)
+        # -------------------------------
+        gcs_json = download_json_from_gcs(name)
+
+        if gcs_json is not None:
+            json_text = json.dumps(gcs_json, indent=2)
+
+        elif os.path.exists(file_path):
             with open(file_path, "r") as f:
                 try:
                     json_data = json.load(f)
@@ -111,7 +150,7 @@ for i, name in enumerate(json_tabs):
                     with open(file_path, "w") as f:
                         json.dump(parsed, f, indent=2)
                     st.success(f"✅ {name} JSON saved successfully!")
-                    st.session_state.saved_tabs[name] = True  # Mark as saved
+                    st.session_state.saved_tabs[name] = True
                 except json.JSONDecodeError as e:
                     st.error(f"❌ Invalid JSON: {e}")
 

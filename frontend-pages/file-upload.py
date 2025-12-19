@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import re
 
 # ✅ Import script functions
 from tabs_scripts.community_led_details import community_led_programs_sum_with_codes, pie_chart_community_led
@@ -15,7 +16,7 @@ from tabs_scripts.programs import generate_program_reports
 from tabs_scripts.extract_district_details import extract_district_details
 from tabs_scripts.extract_community_details import extract_community_details
 from tabs_scripts.upload_images_from_excel import upload_images_from_excel
-
+from tabs_scripts.voices_tab_big_numbers import voices_tab_big_numbers
 
 # ✅ Utility: Clean DataFrame for display
 def sanitize_dataframe(df):
@@ -24,12 +25,15 @@ def sanitize_dataframe(df):
             df[col] = df[col].astype(str)
     return df
 
+# ✅ Normalize sheet names to match (remove spaces/symbols and lowercase)
+def normalize_name(name):
+    return re.sub(r'[^a-z0-9]', '', name.strip().lower())
 
-# ✅ Allowed sheets for preview & upload
+# ✅ Allowed sheets for preview & upload (clean names)
 allowed_tabs = [
     "Data on homepage", "Dashboard first page", "Goals", "States details",
     "District Details", "Programs", "Micro improvements progress",
-    "Partners", "Network Map", "Testimonials", "Imagesicons"
+    "Partners", "Network Map", "Testimonials", "Images/icons", "Voices Tab Big Numbers"
 ]
 
 # ✅ Map sheet names to upload processing functions
@@ -44,9 +48,12 @@ upload_actions = {
     "Partners": get_partners,
     "Network Map": get_network_map_data,
     "Testimonials": testimonials,
-    "Imagesicons":upload_images_from_excel
+    "Imagesicons": upload_images_from_excel,
+    "Voices Tab Big Numbers": voices_tab_big_numbers
 }
 
+# ✅ Create a mapping of normalized names → clean display names
+normalized_to_display = {normalize_name(name): name for name in allowed_tabs}
 
 # ✅ Streamlit Page Setup
 st.set_page_config(page_title="File Upload App", page_icon=":page_facing_up:")
@@ -100,8 +107,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
-
 # ✅ File Upload Input
 uploaded_file = st.file_uploader("Choose a file", type=["csv", "txt", "xlsx"])
 
@@ -129,30 +134,46 @@ if uploaded_file is not None:
             excel_data = pd.read_excel(uploaded_file, sheet_name=None)
             sheet_names = list(excel_data.keys())
 
-            visible_sheet_names = [name for name in sheet_names if name in allowed_tabs]
+            # ✅ Normalize sheet names for matching
+            visible_sheet_names = []
+            sheet_to_display = {}  # Map Excel sheet → clean display name
+            for name in sheet_names:
+                norm = normalize_name(name)
+                if norm in normalized_to_display:
+                    visible_sheet_names.append(name)
+                    sheet_to_display[name] = normalized_to_display[norm]
 
             if visible_sheet_names:
-                tabs = st.tabs(visible_sheet_names)
+                tabs = st.tabs([sheet_to_display[name] for name in visible_sheet_names])
 
                 for i, sheet_name in enumerate(visible_sheet_names):
+                    display_name = sheet_to_display[sheet_name]
                     with tabs[i]:
-                        st.markdown(f"### Sheet: {sheet_name}")
+                        st.markdown(f"### Sheet: {display_name}")
                         cleaned_df = sanitize_dataframe(excel_data[sheet_name])
                         st.dataframe(cleaned_df, height=400)
 
                         # 🔽 Sub-tab for upload
-                        with st.expander(f"📤 Upload `{sheet_name}`", expanded=False):
-                            if st.button(f"Upload {sheet_name}", key=f"upload_btn_{sheet_name}"):
+                        with st.expander(f"📤 Upload `{display_name}`", expanded=False):
+                            if st.button(f"Upload {display_name}", key=f"upload_btn_{display_name}"):
                                 try:
-                                    with st.status(f"🔄 Uploading `{sheet_name}`...", expanded=True) as status:
-                                        upload_function = upload_actions.get(sheet_name)
+                                    with st.status(f"🔄 Uploading `{display_name}`...", expanded=True) as status:
+
+                                        # ✅ Find upload function using normalized names
+                                        norm_sheet = normalize_name(sheet_name)
+                                        upload_function = None
+                                        for key, func in upload_actions.items():
+                                            if normalize_name(key) == norm_sheet:
+                                                upload_function = func
+                                                break
+
                                         if upload_function:
                                             upload_function(uploaded_file)
-                                            status.update(label=f"✅ `{sheet_name}` uploaded successfully!", state="complete")
+                                            status.update(label=f"✅ `{display_name}` uploaded successfully!", state="complete")
                                         else:
-                                            status.update(label=f"⚠️ No function mapped for `{sheet_name}`", state="error")
+                                            status.update(label=f"⚠️ No function mapped for `{display_name}`", state="error")
                                 except Exception as e:
-                                    st.error(f"❌ Error uploading `{sheet_name}`: {e}")
+                                    st.error(f"❌ Error uploading `{display_name}`: {e}")
             else:
                 st.warning("⚠️ No allowed sheets found to preview.")
 
@@ -179,6 +200,7 @@ if uploaded_file is not None:
                     extract_community_details(uploaded_file)
                     extract_micro_improvements(uploaded_file)
                     upload_images_from_excel(uploaded_file)
+                    voices_tab_big_numbers(uploaded_file)
                     status.update(label="✅ All files uploaded successfully!", state="complete")
             except Exception as e:
                 st.error(f"❌ Error during full upload: {e}")
